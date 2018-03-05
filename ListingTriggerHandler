@@ -1,0 +1,378 @@
+public class ListingTriggerHandler
+{
+    public void onbeforeupdate(list<pba__Listing__c> lstnewlisting,map<id,pba__Listing__c> triggerOldMap)
+    {
+        updateTargetonListing(lstnewlisting,triggerOldMap);
+    }
+    public void onafterupdate(list<pba__Listing__c> lstnewlisting,map<id,pba__Listing__c> triggerOldMap)
+    {
+        updateAskingPriceonTarget(lstnewlisting,triggerOldMap);
+    }
+    
+    public void updateTargetonListing(list<pba__Listing__c> lstnewlisting,map<id,pba__Listing__c> triggerOldMap )
+    {
+        map<string,Id> mapTarget = new map<string,Id>();
+        map<string,Id> mapTarget1 = new map<string,Id>();
+        Set<String> setLotPP = new Set<String>();
+        Set<String> setNeighborhood = new Set<String>();
+        Set<String> setLotPP1 = new Set<String>();
+        Set<String> setNeighborhood1 = new Set<String>();
+        
+        for(pba__Listing__c objListing : lstnewlisting)
+        {
+            Id idListingRecordTypeDevListing = Schema.Sobjecttype.pba__Listing__c.getRecordTypeInfosByName().get('Developer Listing').getRecordTypeId();
+
+            Id idListingRecordTypeSale = Schema.Sobjecttype.pba__Listing__c.getRecordTypeInfosByName().get('Sale').getRecordTypeId();
+            
+            if(objListing.Lot_Product_Program1__c != null && objListing.RecordTypeid != null && objListing.Builder_Actual_Closing_Date__c != null && objListing.Neighborhood1__c != null && (objListing.Development_Status__c == 'Lot Under Contract'  || objListing.Development_Status__c == 'Home Sold/Closed' || objListing.Development_Status__c == 'Home Under Contract'))
+            {
+                
+                if(objListing.RecordTypeid == idListingRecordTypeDevListing)
+                {
+                    string tempyear = string.valueOf(objlisting.Builder_Actual_Closing_Date__c.year());
+                    string tempmonth = string.valueOf(objlisting.Builder_Actual_Closing_Date__c.month());
+                    
+                    system.debug(tempyear+'tmpKey....'+tempmonth);
+                    setLotPP.add(objListing.Lot_Product_Program1__c);
+                    setNeighborhood.add(objListing.Neighborhood1__c);
+                }
+                if(objListing.RecordTypeid == idListingRecordTypeSale)
+                {
+                    string tempyear1 = string.valueOf(objlisting.Builder_Actual_Closing_Date__c.year());
+                    string tempmonth1 = string.valueOf(objlisting.Builder_Actual_Closing_Date__c.month());
+                    
+                    system.debug(tempyear1+'tmpKey....'+tempmonth1);
+                    setLotPP1.add(objListing.Lot_Product_Program1__c);
+                    setNeighborhood1.add(objListing.Neighborhood1__c);
+                }
+                
+            }
+        }
+        system.debug(setLotPP+'...setLotPP...'+setNeighborhood);
+        if(setLotPP.size()>0 && setNeighborhood.size()>0)
+        {
+            for (Target__c objtarget : [Select id, Actual__c,Lot_Product_Program__c,Month__c,month_no__c,Neighborhood__c,Target_Name__c,Type__c,Year__c from Target__c where Lot_Product_Program__c IN: setLotPP and Neighborhood__c IN: setNeighborhood and Type__c = 'Developer To Builder'])
+            {
+                string strKey = objtarget.Year__c+'-'+objtarget.month_no__c+'-'+objtarget.Lot_Product_Program__c+'-'+objtarget.Neighborhood__c;
+            
+                system.debug('strKey....'+strKey);
+            
+                if(strKey != null)
+                {
+                    mapTarget.put(strKey,objtarget.Id);
+                }
+            }
+            
+            if(mapTarget.size()>0)
+            {
+                for(pba__Listing__c objListing : lstnewlisting)
+                {
+                    if(objlisting.Builder_Actual_Closing_Date__c != null)
+                    {
+                        string tempyear = string.valueOf(objlisting.Builder_Actual_Closing_Date__c.year());
+                        string tempmonth = string.valueOf(objlisting.Builder_Actual_Closing_Date__c.month());
+                    
+                        system.debug(tempyear+'tmpKey....'+tempmonth);
+                        string tmpKey = tempyear+'-'+tempmonth+'-'+objlisting.Lot_Product_Program1__c+'-'+objlisting.Neighborhood1__c;
+                        system.debug('tmpKey...'+tmpKey);
+                        
+                        if(mapTarget.containsKey(tmpKey))
+                        {
+                            objListing.Target__c = mapTarget.get(tmpKey);
+                            system.debug('mapTarget....'+mapTarget.get(tmpKey));
+                        }
+                    }
+                }
+            }
+        }
+        if(setLotPP1.size()>0 && setNeighborhood1.size()>0)
+        {
+            for (Target__c objtarget1 : [Select id, Actual__c,Lot_Product_Program__c,Month__c,month_no__c,Neighborhood__c,Target_Name__c,Type__c,Year__c from Target__c where Lot_Product_Program__c IN: setLotPP1 and Neighborhood__c IN: setNeighborhood1 and Type__c = 'Builder To End User'])
+            {
+                string strKey1 = objtarget1.Year__c+'-'+objtarget1.month_no__c+'-'+objtarget1.Lot_Product_Program__c+'-'+objtarget1.Neighborhood__c;
+            
+                system.debug('strKey1....'+strKey1);
+            
+                if(strKey1 != null)
+                {
+                    mapTarget1.put(strKey1,objtarget1.Id);
+                }
+            }
+            
+            if(mapTarget1.size()>0)
+            {
+                for(pba__Listing__c objListing : lstnewlisting)
+                {
+                    if(objlisting.Builder_Actual_Closing_Date__c != null)
+                    {
+                        string tempyear1 = string.valueOf(objlisting.Builder_Actual_Closing_Date__c.year());
+                        string tempmonth1 = string.valueOf(objlisting.Builder_Actual_Closing_Date__c.month());
+                    
+                        system.debug(tempyear1+'tmpKey1....'+tempmonth1);
+                        string tmpKey1 = tempyear1+'-'+tempmonth1+'-'+objlisting.Lot_Product_Program1__c+'-'+objlisting.Neighborhood1__c;
+                        system.debug('tmpKey1...'+tmpKey1);
+                        
+                        if(mapTarget1.containsKey(tmpKey1))
+                        {
+                            objListing.Target__c = mapTarget1.get(tmpKey1);
+                            system.debug('mapTarget1....'+mapTarget1.get(tmpKey1));
+                        }
+                    }
+                }
+            }
+        }
+    } 
+    
+    public void updateAskingPriceonTarget(list<pba__Listing__c> lstnewlisting,map<id,pba__Listing__c> triggerOldMap )
+    {
+        List<Target__c> lstupdatetarget = new List<Target__c>();
+        Set<Id> listingIds =new Set<Id>();
+        List<pba__Listing__c> empList = new List<pba__Listing__c>();
+        map<string,decimal> mapLotUnderContractTotalSoldPrice = new map<string,decimal>();
+        map<string,decimal> mapHomeUnderContractTotalSoldPrice = new map<string,decimal>();
+        map<string,decimal> mapHomeSoldClosedUnderContractTotalSoldPrice = new map<string,decimal>();
+        
+        map<string,integer> mapLotUnderContractCount = new map<string,integer>();
+        map<string,integer> mapHomeUnderContractCount = new map<string,integer>();
+        map<string,integer> mapHomeSoldClosedUnderContractCount = new map<string,integer>();
+        
+        set<Id> setids = new set<Id>();
+        
+        for(pba__Listing__c objlisting : lstnewlisting)
+        {
+            Id idListingRecordTypeDevListing = Schema.Sobjecttype.pba__Listing__c.getRecordTypeInfosByName().get('Developer Listing').getRecordTypeId();
+
+            Id idListingRecordTypeSale = Schema.Sobjecttype.pba__Listing__c.getRecordTypeInfosByName().get('Sale').getRecordTypeId();
+            
+            
+            if(objListing.RecordTypeid == idListingRecordTypeSale) //record type check : Sale
+            {
+                if(objlisting.Target__c != null && objlisting.Lot_Total_Sold_Price__c != null)
+                {
+                    setids.add(objlisting.Target__c);
+                    string strKey = objlisting.Target__c+'-Sale';
+                    
+                    if(objListing.Development_Status__c == 'Lot Under Contract' && objListing.Development_Status__c != triggerOldMap.get(objListing.id).Development_Status__c) //picklist field check..
+                    {
+                        if(mapLotUnderContractTotalSoldPrice.containsKey(strKey))
+                        {
+                            Decimal decAskPrice = mapLotUnderContractTotalSoldPrice.get(strKey);
+                            decAskPrice = decAskPrice + objlisting.Lot_Total_Sold_Price__c;
+                            mapLotUnderContractTotalSoldPrice.put(strKey,decAskPrice);
+                        }else{
+                            mapLotUnderContractTotalSoldPrice.put(strKey,objlisting.Lot_Total_Sold_Price__c);
+                        }
+                        
+                        if(mapLotUnderContractCount.containsKey(strKey))
+                        {
+                            integer intCount = mapLotUnderContractCount.get(strKey);
+                            intCount++;
+                            mapLotUnderContractCount.put(strKey,intCount);
+                        }else{
+                            mapLotUnderContractCount.put(strKey,1);
+                        }
+                    }
+                    
+                    if(objListing.Development_Status__c == 'Home Under Contract' && objListing.Development_Status__c != triggerOldMap.get(objListing.id).Development_Status__c) //picklist field check..
+                    {
+                        if(mapHomeUnderContractTotalSoldPrice.containsKey(strKey))
+                        {
+                            Decimal decAskPrice = mapHomeUnderContractTotalSoldPrice.get(strKey);
+                            decAskPrice = decAskPrice + objlisting.Lot_Total_Sold_Price__c;
+                            mapHomeUnderContractTotalSoldPrice.put(strKey,decAskPrice);
+                        }else{
+                            mapHomeUnderContractTotalSoldPrice.put(strKey,objlisting.Lot_Total_Sold_Price__c);
+                        }
+                        
+                        if(mapHomeUnderContractCount.containsKey(strKey))
+                        {
+                            integer intCount = mapHomeUnderContractCount.get(strKey);
+                            intCount++;
+                            mapHomeUnderContractCount.put(strKey,intCount);
+                        }else{
+                            mapHomeUnderContractCount.put(strKey,1);
+                        }
+                    }
+                    
+                    if(objListing.Development_Status__c == 'Home Sold/Closed' && objListing.Development_Status__c != triggerOldMap.get(objListing.id).Development_Status__c) //picklist field check..
+                    {
+                        if(mapHomeSoldClosedUnderContractTotalSoldPrice.containsKey(strKey))
+                        {
+                            Decimal decAskPrice = mapHomeSoldClosedUnderContractTotalSoldPrice.get(strKey);
+                            decAskPrice = decAskPrice + objlisting.Lot_Total_Sold_Price__c;
+                            mapHomeSoldClosedUnderContractTotalSoldPrice.put(strKey,decAskPrice);
+                        }else{
+                            mapHomeSoldClosedUnderContractTotalSoldPrice.put(strKey,objlisting.Lot_Total_Sold_Price__c);
+                        }
+                        
+                        if(mapHomeSoldClosedUnderContractCount.containsKey(strKey))
+                        {
+                            integer intCount = mapHomeSoldClosedUnderContractCount.get(strKey);
+                            intCount++;
+                            mapHomeSoldClosedUnderContractCount.put(strKey,intCount);
+                        }else{
+                            mapHomeSoldClosedUnderContractCount.put(strKey,1);
+                        }
+                    }
+                }
+            }
+            else if(objListing.RecordTypeid == idListingRecordTypeDevListing) // record type check : Developer Listing
+            {
+                if(objlisting.Target__c != null && objlisting.Asking__c != null)
+                {
+                    setids.add(objlisting.Target__c);
+                    string strKey = objlisting.Target__c+'-Developer';
+                    
+                    if(objListing.Development_Status__c == 'Lot Under Contract' && objListing.Development_Status__c != triggerOldMap.get(objListing.id).Development_Status__c) //picklist field check..
+                    {
+                        if(mapLotUnderContractTotalSoldPrice.containsKey(strKey))
+                        {
+                            Decimal decAskPrice = mapLotUnderContractTotalSoldPrice.get(strKey);
+                            decAskPrice = decAskPrice + objlisting.Asking__c;
+                            mapLotUnderContractTotalSoldPrice.put(strKey,decAskPrice);
+                        }else{
+                            mapLotUnderContractTotalSoldPrice.put(strKey,objlisting.Asking__c);
+                        }
+                        
+                        if(mapLotUnderContractCount.containsKey(strKey))
+                        {
+                            integer intCount = mapLotUnderContractCount.get(strKey);
+                            intCount++;
+                            mapLotUnderContractCount.put(strKey,intCount);
+                        }else{
+                            mapLotUnderContractCount.put(strKey,1);
+                        }
+                    }
+                    
+                    if(objListing.Development_Status__c == 'Home Under Contract' && objListing.Development_Status__c != triggerOldMap.get(objListing.id).Development_Status__c) //picklist field check..
+                    {
+                        if(mapHomeUnderContractTotalSoldPrice.containsKey(strKey))
+                        {
+                            Decimal decAskPrice = mapHomeUnderContractTotalSoldPrice.get(strKey);
+                            decAskPrice = decAskPrice + objlisting.Asking__c;
+                            mapHomeUnderContractTotalSoldPrice.put(strKey,decAskPrice);
+                        }else{
+                            mapHomeUnderContractTotalSoldPrice.put(strKey,objlisting.Asking__c);
+                        }
+                        
+                        if(mapHomeUnderContractCount.containsKey(strKey))
+                        {
+                            integer intCount = mapHomeUnderContractCount.get(strKey);
+                            intCount++;
+                            mapHomeUnderContractCount.put(strKey,intCount);
+                        }else{
+                            mapHomeUnderContractCount.put(strKey,1);
+                        }
+                    }
+                    
+                    if(objListing.Development_Status__c == 'Home Sold/Closed' && objListing.Development_Status__c != triggerOldMap.get(objListing.id).Development_Status__c) //picklist field check..
+                    {
+                        if(mapHomeSoldClosedUnderContractTotalSoldPrice.containsKey(strKey))
+                        {
+                            Decimal decAskPrice = mapHomeSoldClosedUnderContractTotalSoldPrice.get(strKey);
+                            decAskPrice = decAskPrice + objlisting.Asking__c;
+                            mapHomeSoldClosedUnderContractTotalSoldPrice.put(strKey,decAskPrice);
+                        }else{
+                            mapHomeSoldClosedUnderContractTotalSoldPrice.put(strKey,objlisting.Asking__c);
+                        }
+                        
+                        if(mapHomeSoldClosedUnderContractCount.containsKey(strKey))
+                        {
+                            integer intCount = mapHomeSoldClosedUnderContractCount.get(strKey);
+                            intCount++;
+                            mapHomeSoldClosedUnderContractCount.put(strKey,intCount);
+                        }else{
+                            mapHomeSoldClosedUnderContractCount.put(strKey,1);
+                        }
+                    }
+                }
+            }
+        }
+        
+        if(setids.size()>0)
+        {
+            list<Target__c> lstTarget = new list<Target__c>();
+            lstTarget = [select id,Lot_Closing_Revenue_Actual__c,Actual__c,Home_Contract_Revenue_Actual__c,Home_Contract_Unit_Actual__c,Home_Closing_Revenue_Actual__c,Home_Closing_Unit_Actual__c from Target__c where Id IN: setids];
+            
+            for(Target__c objTrgt : lstTarget)
+            {
+                if(objTrgt.Lot_Closing_Revenue_Actual__c == null)
+                    objTrgt.Lot_Closing_Revenue_Actual__c = 0;
+                    
+                if(objTrgt.Home_Contract_Revenue_Actual__c == null)
+                    objTrgt.Home_Contract_Revenue_Actual__c = 0;
+                    
+                if(objTrgt.Home_Closing_Revenue_Actual__c == null)
+                    objTrgt.Home_Closing_Revenue_Actual__c = 0;
+                
+                if(objTrgt.Actual__c == null)
+                    objTrgt.Actual__c = 0;
+                
+                if(objTrgt.Home_Contract_Unit_Actual__c == null)
+                    objTrgt.Home_Contract_Unit_Actual__c = 0;
+                
+                if(objTrgt.Home_Closing_Unit_Actual__c == null)
+                    objTrgt.Home_Closing_Unit_Actual__c = 0;
+                
+                if(mapLotUnderContractTotalSoldPrice.containsKey(objTrgt.id+'-Sale'))
+                {
+                    objTrgt.Lot_Closing_Revenue_Actual__c = objTrgt.Lot_Closing_Revenue_Actual__c + mapLotUnderContractTotalSoldPrice.get(objTrgt.id+'-Sale');
+                }
+                if(mapHomeUnderContractTotalSoldPrice.containsKey(objTrgt.id+'-Sale'))
+                {
+                    objTrgt.Home_Contract_Revenue_Actual__c = objTrgt.Home_Contract_Revenue_Actual__c +  mapHomeUnderContractTotalSoldPrice.get(objTrgt.id+'-Sale');
+                }
+                if(mapHomeSoldClosedUnderContractTotalSoldPrice.containsKey(objTrgt.id+'-Sale'))
+                {
+                    objTrgt.Home_Closing_Revenue_Actual__c = objTrgt.Home_Closing_Revenue_Actual__c +  mapHomeSoldClosedUnderContractTotalSoldPrice.get(objTrgt.id+'-Sale');
+                }
+                if(mapLotUnderContractTotalSoldPrice.containsKey(objTrgt.id+'-Developer'))
+                {
+                    objTrgt.Lot_Closing_Revenue_Actual__c = objTrgt.Lot_Closing_Revenue_Actual__c + mapLotUnderContractTotalSoldPrice.get(objTrgt.id+'-Developer');
+                }
+                if(mapHomeUnderContractTotalSoldPrice.containsKey(objTrgt.id+'-Developer'))
+                {
+                    objTrgt.Home_Contract_Revenue_Actual__c = objTrgt.Home_Contract_Revenue_Actual__c +  mapHomeUnderContractTotalSoldPrice.get(objTrgt.id+'-Developer');
+                }
+                if(mapHomeSoldClosedUnderContractTotalSoldPrice.containsKey(objTrgt.id+'-Developer'))
+                {
+                    objTrgt.Home_Closing_Revenue_Actual__c = objTrgt.Home_Closing_Revenue_Actual__c +  mapHomeSoldClosedUnderContractTotalSoldPrice.get(objTrgt.id+'-Developer');
+                }
+                
+                if(mapLotUnderContractCount.containsKey(objTrgt.id+'-Sale'))
+                {
+                    objTrgt.Actual__c = objTrgt.Actual__c + mapLotUnderContractCount.get(objTrgt.id+'-Sale');
+                }
+                if(mapHomeUnderContractCount.containsKey(objTrgt.id+'-Sale'))
+                {
+                    objTrgt.Home_Contract_Unit_Actual__c = objTrgt.Home_Contract_Unit_Actual__c + mapHomeUnderContractCount.get(objTrgt.id+'-Sale');
+                }
+                if(mapHomeSoldClosedUnderContractCount.containsKey(objTrgt.id+'-Sale'))
+                {
+                    objTrgt.Home_Closing_Unit_Actual__c = objTrgt.Home_Closing_Unit_Actual__c + mapHomeSoldClosedUnderContractCount.get(objTrgt.id+'-Sale');
+                }
+                if(mapLotUnderContractCount.containsKey(objTrgt.id+'-Developer'))
+                {
+                    objTrgt.Actual__c = objTrgt.Actual__c + mapLotUnderContractCount.get(objTrgt.id+'-Developer');
+                }
+                if(mapHomeUnderContractCount.containsKey(objTrgt.id+'-Developer'))
+                {
+                    objTrgt.Home_Contract_Unit_Actual__c = objTrgt.Home_Contract_Unit_Actual__c + mapHomeUnderContractCount.get(objTrgt.id+'-Developer');
+                }
+                if(mapHomeSoldClosedUnderContractCount.containsKey(objTrgt.id+'-Developer'))
+                {
+                    objTrgt.Home_Closing_Unit_Actual__c = objTrgt.Home_Closing_Unit_Actual__c + mapHomeSoldClosedUnderContractCount.get(objTrgt.id+'-Developer');
+                }
+                
+                
+                lstupdatetarget.add(objTrgt);
+            }
+        }
+        
+        if(lstupdatetarget.size()>0)
+        {
+            update lstupdatetarget;
+        }
+    }
+
+}
