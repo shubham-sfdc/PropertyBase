@@ -20,23 +20,23 @@ public class ListingTriggerHandler
         
         for(pba__Listing__c objListing : lstnewlisting)
         {
-            Id idListingRecordTypeDevListing = Schema.Sobjecttype.pba__Listing__c.getRecordTypeInfosByName().get('Developer Listing').getRecordTypeId();
+            //Id idListingRecordTypeDevListing = Schema.Sobjecttype.pba__Listing__c.getRecordTypeInfosByName().get('Developer Listing').getRecordTypeId();
 
-            Id idListingRecordTypeSale = Schema.Sobjecttype.pba__Listing__c.getRecordTypeInfosByName().get('Sale').getRecordTypeId();
+            //Id idListingRecordTypeSale = Schema.Sobjecttype.pba__Listing__c.getRecordTypeInfosByName().get('Sale').getRecordTypeId();
             
-            if(objListing.Lot_Product_Program1__c != null && objListing.RecordTypeid != null && objListing.Builder_Actual_Closing_Date__c != null && objListing.Neighborhood1__c != null && (objListing.Development_Status__c == 'Lot Under Contract'  || objListing.Development_Status__c == 'Home Sold/Closed' || objListing.Development_Status__c == 'Home Under Contract'))
+            if(objListing.Lot_Product_Program1__c != null && /*objListing.RecordTypeid != null &&*/ objListing.Builder_Actual_Closing_Date__c != null && objListing.Neighborhood1__c != null && (objListing.Development_Status__c == 'Lot Under Contract'  || objListing.Development_Status__c == 'Home Sold/Closed' || objListing.Development_Status__c == 'Home Under Contract'))
             {
                 
-                if(objListing.RecordTypeid == idListingRecordTypeDevListing)
-                {
+                //if(objListing.RecordTypeid == idListingRecordTypeDevListing)
+                //{
                     string tempyear = string.valueOf(objlisting.Builder_Actual_Closing_Date__c.year());
                     string tempmonth = string.valueOf(objlisting.Builder_Actual_Closing_Date__c.month());
                     
                     system.debug(tempyear+'tmpKey....'+tempmonth);
                     setLotPP.add(objListing.Lot_Product_Program1__c);
                     setNeighborhood.add(objListing.Neighborhood1__c);
-                }
-                if(objListing.RecordTypeid == idListingRecordTypeSale)
+                //}
+                /*if(objListing.RecordTypeid == idListingRecordTypeSale)
                 {
                     string tempyear1 = string.valueOf(objlisting.Builder_Actual_Closing_Date__c.year());
                     string tempmonth1 = string.valueOf(objlisting.Builder_Actual_Closing_Date__c.month());
@@ -44,14 +44,14 @@ public class ListingTriggerHandler
                     system.debug(tempyear1+'tmpKey....'+tempmonth1);
                     setLotPP1.add(objListing.Lot_Product_Program1__c);
                     setNeighborhood1.add(objListing.Neighborhood1__c);
-                }
+                }*/
                 
             }
         }
         system.debug(setLotPP+'...setLotPP...'+setNeighborhood);
         if(setLotPP.size()>0 && setNeighborhood.size()>0)
         {
-            for (Target__c objtarget : [Select id, Actual__c,Lot_Product_Program__c,Month__c,month_no__c,Neighborhood__c,Target_Name__c,Type__c,Year__c from Target__c where Lot_Product_Program__c IN: setLotPP and Neighborhood__c IN: setNeighborhood and Type__c = 'Developer To Builder'])
+            for (Target__c objtarget : [Select id, Actual__c,Lot_Product_Program__c,Month__c,month_no__c,Neighborhood__c,Target_Name__c,Type__c,Year__c from Target__c where Lot_Product_Program__c IN: setLotPP and Neighborhood__c IN: setNeighborhood /*and Type__c = 'Developer To Builder'*/])
             {
                 string strKey = objtarget.Year__c+'-'+objtarget.month_no__c+'-'+objtarget.Lot_Product_Program__c+'-'+objtarget.Neighborhood__c;
             
@@ -67,25 +67,45 @@ public class ListingTriggerHandler
             {
                 for(pba__Listing__c objListing : lstnewlisting)
                 {
-                    if(objlisting.Builder_Actual_Closing_Date__c != null)
-                    {
-                        string tempyear = string.valueOf(objlisting.Builder_Actual_Closing_Date__c.year());
-                        string tempmonth = string.valueOf(objlisting.Builder_Actual_Closing_Date__c.month());
-                    
-                        system.debug(tempyear+'tmpKey....'+tempmonth);
-                        string tmpKey = tempyear+'-'+tempmonth+'-'+objlisting.Lot_Product_Program1__c+'-'+objlisting.Neighborhood1__c;
-                        system.debug('tmpKey...'+tmpKey);
-                        
-                        if(mapTarget.containsKey(tmpKey))
-                        {
-                            objListing.Target__c = mapTarget.get(tmpKey);
-                            system.debug('mapTarget....'+mapTarget.get(tmpKey));
-                        }
-                    }
+                    if(objListing.Development_Status__c == 'Home Under Contract')
+					{
+						if(objlisting.Builder_Anticipated_Closing_Date__c != null)
+						{
+							string tempyear1 = string.valueOf(objlisting.Builder_Anticipated_Closing_Date__c.year());
+							string tempmonth1 = string.valueOf(objlisting.Builder_Anticipated_Closing_Date__c.month());
+						
+							system.debug(tempyear1+'tmpKey....'+tempmonth1);
+							string tmpKey = tempyear1+'-'+tempmonth1+'-'+objlisting.Lot_Product_Program1__c+'-'+objlisting.Neighborhood1__c;
+							system.debug('tmpKey...'+tmpKey);
+							
+							if(mapTarget.containsKey(tmpKey))
+							{
+								objListing.Target__c = mapTarget.get(tmpKey);
+								system.debug('mapTarget....'+mapTarget.get(tmpKey));
+							}
+						}
+					}
+					else{
+						if(objlisting.Builder_Actual_Closing_Date__c != null)
+						{
+							string tempyear = string.valueOf(objlisting.Builder_Actual_Closing_Date__c.year());
+							string tempmonth = string.valueOf(objlisting.Builder_Actual_Closing_Date__c.month());
+						
+							system.debug(tempyear+'tmpKey....'+tempmonth);
+							string tmpKey = tempyear+'-'+tempmonth+'-'+objlisting.Lot_Product_Program1__c+'-'+objlisting.Neighborhood1__c;
+							system.debug('tmpKey...'+tmpKey);
+							
+							if(mapTarget.containsKey(tmpKey))
+							{
+								objListing.Target__c = mapTarget.get(tmpKey);
+								system.debug('mapTarget....'+mapTarget.get(tmpKey));
+							}
+						}
+					}
                 }
             }
         }
-        if(setLotPP1.size()>0 && setNeighborhood1.size()>0)
+        /*if(setLotPP1.size()>0 && setNeighborhood1.size()>0)
         {
             for (Target__c objtarget1 : [Select id, Actual__c,Lot_Product_Program__c,Month__c,month_no__c,Neighborhood__c,Target_Name__c,Type__c,Year__c from Target__c where Lot_Product_Program__c IN: setLotPP1 and Neighborhood__c IN: setNeighborhood1 and Type__c = 'Builder To End User'])
             {
@@ -120,7 +140,7 @@ public class ListingTriggerHandler
                     }
                 }
             }
-        }
+        }*/
     } 
     
     public void updateAskingPriceonTarget(list<pba__Listing__c> lstnewlisting,map<id,pba__Listing__c> triggerOldMap )
